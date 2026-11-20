@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .input {
+        @apply block w-full rounded-lg border-gray-300 text-base shadow-sm sm:text-sm focus:border-pink-400 focus:ring-pink-400;
+    }
+    .label {
+        @apply mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500;
+    }
+    .btn {
+        @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+    }
+    .btn-primary {
+        @apply btn bg-pink-500 text-white shadow-sm hover:bg-pink-600;
+    }
+    .btn-secondary {
+        @apply btn border border-gray-300 bg-white text-gray-700 hover:bg-gray-50;
+    }
+    .btn-danger {
+        @apply btn bg-red-50 text-red-600 hover:bg-red-100;
+    }
+    .btn-sm {
+        @apply px-2.5 py-1 text-xs;
+    }
+    .card {
+        @apply rounded-xl border border-gray-200 bg-white shadow-sm;
+    }
+    .table {
+        @apply min-w-full divide-y divide-gray-200 text-sm;
+    }
+    .table th {
+        @apply whitespace-nowrap bg-gray-50 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500;
+    }
+    .table td {
+        @apply px-3 py-2.5 align-middle text-gray-700;
+    }
+    .table tbody tr {
+        @apply hover:bg-pink-50/40;
+    }
+    .badge {
+        @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+    }
+}
+
+@layer components {
+    /* Карточка-строка списка на телефоне */
+    .m-card {
+        @apply rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm;
+    }
+    /* Поиск / фильтры: на телефоне во всю ширину */
+    .filter-input {
+        @apply input w-full sm:w-56;
+    }
+    .filter-select {
+        @apply input min-w-0 flex-1 sm:w-44 sm:flex-none;
+    }
+}
+
+/* Не даём iOS увеличивать страницу при фокусе и убираем серую подсветку тапа */
+html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.no-scrollbar {
+    scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
