@@ -50,3 +50,7 @@ docker compose down                                  # остановить
 - **Расходы** — реклама, доставка, упаковка и прочие траты.
 
 Прибыль на главной = продажи − закупки − расходы.
+
+## Выкладка на сервер
+
+Docker + git на VPS (DigitalOcean): [deploy/DEPLOY-VPS.md](deploy/DEPLOY-VPS.md)

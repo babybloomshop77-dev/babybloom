@@ -8,7 +8,7 @@ export default defineConfig({
         port: 5173,
         strictPort: true,
         hmr: { host: 'localhost' },
-        watch: { usePolling: true },
+        watch: { usePolling: true, ignored: ['**/deploy/**', '**/vendor/**', '**/storage/**', '**/node_modules/**'] },
         cors: true,
     },
     plugins: [

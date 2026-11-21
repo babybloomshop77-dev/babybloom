@@ -1,0 +1,69 @@
+# Продакшен. Запуск:
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+name: babybloom
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/prod/Dockerfile
+      target: app
+    image: babybloom-app
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      DB_HOST: mysql
+    volumes:
+      - storage:/var/www/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/prod/Dockerfile
+      target: web
+    image: babybloom-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    volumes:
+      - storage:/var/www/storage:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    # Экономим память (сервер 1–2 ГБ)
+    command: >
+      --performance-schema=OFF
+      --innodb-buffer-pool-size=128M
+      --max-connections=40
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  storage:
+  mysql_data:
+  caddy_data:
+  caddy_config:
