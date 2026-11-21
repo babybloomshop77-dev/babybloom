@@ -54,6 +54,9 @@ services:
       --max-connections=40
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
+    # Порт только на localhost сервера: подключение с компьютера — через SSH-туннель (PhpStorm)
+    ports:
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
