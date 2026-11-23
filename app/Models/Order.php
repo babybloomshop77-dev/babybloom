@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
@@ -19,13 +20,18 @@ class Order extends Model
     ];
 
     /**
-     * Заказ выполнен -> создаётся продажа (а она сама добавляет деньги в кассу).
-     * Снята галочка или заказ удалён -> продажа удаляется, деньги уходят из кассы.
+     * Заказ выполнен -> создаётся продажа (она сама добавляет деньги в кассу),
+     * товары заказа становятся проданными.
+     * Снята галочка -> продажа удаляется, деньги уходят из кассы, товары снова в брони.
+     * Заказ удалён -> товары возвращаются на склад.
      */
     protected static function booted(): void
     {
         static::saved(fn (Order $order) => $order->syncSale());
-        static::deleting(fn (Order $order) => $order->sale?->delete());
+        static::deleting(function (Order $order) {
+            $order->sale?->delete();
+            $order->stockItems()->update(['order_id' => null, 'status' => 'in_stock', 'sold_at' => null, 'reserved_for' => null]);
+        });
     }
 
     public function sale(): HasOne
@@ -33,10 +39,19 @@ class Order extends Model
         return $this->hasOne(Sale::class);
     }
 
+    public function stockItems(): HasMany
+    {
+        return $this->hasMany(StockItem::class);
+    }
+
     public function syncSale(): void
     {
         $justDone = $this->is_done && ($this->wasRecentlyCreated || $this->wasChanged('is_done'));
         $sale = $this->sale()->first();
+
+        // Себестоимость заказа = сумма себестоимости его товаров (если она известна)
+        $items = $this->stockItems()->get();
+        $cost = $items->whereNotNull('buy_price')->isEmpty() ? null : (int) $items->sum('buy_price');
 
         if (! $this->is_done) {
             $sale?->delete();
@@ -44,16 +59,32 @@ class Order extends Model
             $sale->update([
                 'product' => $this->items,
                 'price' => $this->price,
+                'cost' => $cost,
                 'customer_name' => $this->customer_name,
             ]);
         } elseif ($justDone) {
             $this->sale()->create([
                 'product' => $this->items,
                 'price' => $this->price,
+                'cost' => $cost,
                 'sold_at' => now()->toDateString(),
                 'customer_name' => $this->customer_name,
                 'note' => 'Заказ клиента',
             ]);
+        }
+
+        $this->applyItemStates();
+    }
+
+    /** Выполнен -> товары проданы; не выполнен -> в брони за клиентом */
+    public function applyItemStates(): void
+    {
+        if ($this->is_done) {
+            foreach ($this->stockItems()->get() as $item) {
+                $item->update(['status' => 'sold', 'reserved_for' => null, 'sold_at' => $item->sold_at ?? now()->toDateString()]);
+            }
+        } else {
+            $this->stockItems()->update(['status' => 'reserved', 'sold_at' => null, 'reserved_for' => $this->customer_name]);
         }
     }
 }

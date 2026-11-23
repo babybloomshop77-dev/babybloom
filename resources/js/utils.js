@@ -37,3 +37,11 @@ export function imageFor(product, color) {
     const match = color ? images.find((i) => i.color && norm(i.color) === norm(color)) : null;
     return (match ?? images.find((i) => !i.color) ?? images[0]).url;
 }
+
+/* «Для кого» */
+export const genderIcons = { boy: '👦', girl: '👧', unisex: '🧒' };
+export const genderColors = {
+    boy: 'bg-sky-100 text-sky-700',
+    girl: 'bg-pink-100 text-pink-700',
+    unisex: 'bg-violet-100 text-violet-700',
+};

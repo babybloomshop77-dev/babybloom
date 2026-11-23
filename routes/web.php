@@ -16,6 +16,7 @@ Route::redirect('/', '/dashboard');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
+    Route::patch('products/{product}/gender', [ProductController::class, 'gender'])->name('products.gender');
     Route::resource('products', ProductController::class)->except('show');
     Route::post('purchases/bulk-status', [PurchaseController::class, 'bulkStatus'])->name('purchases.bulk-status');
     Route::resource('purchases', PurchaseController::class)->except('show');

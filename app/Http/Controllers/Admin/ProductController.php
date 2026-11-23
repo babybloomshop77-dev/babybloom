@@ -22,16 +22,18 @@ class ProductController extends Controller
                 'stockItems as ordered_count' => fn ($q) => $q->where('status', 'ordered'),
                 'stockItems as sold_count' => fn ($q) => $q->where('status', 'sold'),
             ])
-            ->when($request->search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->when($request->search, fn ($q, $s) => $q->where('name', 'like', $this->like($s)))
             ->when($request->source, fn ($q, $s) => $q->where('source', $s))
+            ->forGender($request->gender)
             ->latest()
             ->paginate(24)
             ->withQueryString();
 
         return Inertia::render('Products/Index', [
             'products' => $products,
-            'filters' => $request->only('search', 'source'),
+            'filters' => $request->only('search', 'source', 'gender'),
             'sources' => Product::SOURCES,
+            'genders' => Product::GENDERS,
         ]);
     }
 
@@ -40,6 +42,7 @@ class ProductController extends Controller
         return Inertia::render('Products/Form', [
             'product' => null,
             'sources' => Product::SOURCES,
+            'genders' => Product::GENDERS,
             'backUrl' => $this->backUrl(route('products.index')),
         ]);
     }
@@ -57,6 +60,7 @@ class ProductController extends Controller
         return Inertia::render('Products/Form', [
             'product' => $product->load('images'),
             'sources' => Product::SOURCES,
+            'genders' => Product::GENDERS,
             'backUrl' => $this->backUrl(route('products.index')),
         ]);
     }
@@ -78,6 +82,15 @@ class ProductController extends Controller
         return redirect($this->safeBack($request->input('back'), route('products.index')))->with('success', 'Товар сохранён');
     }
 
+    /** Быстро поменять «для кого» прямо из списка товаров */
+    public function gender(Request $request, Product $product)
+    {
+        $data = $request->validate(['gender' => 'nullable|in:'.implode(',', array_keys(Product::GENDERS))]);
+        $product->update(['gender' => $data['gender'] ?? null]);
+
+        return back();
+    }
+
     public function destroy(Product $product)
     {
         foreach ($product->images as $image) {
@@ -92,6 +105,7 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'gender' => 'nullable|in:'.implode(',', array_keys(Product::GENDERS)),
             'description' => 'nullable|string',
             'source' => 'required|in:'.implode(',', array_keys(Product::SOURCES)),
             'pinduoduo_url' => 'nullable|string',

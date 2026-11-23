@@ -5,13 +5,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import Field from '@/Components/UI/Field.vue';
 import TagInput from '@/Components/UI/TagInput.vue';
-import { money } from '@/utils';
+import { money, genderIcons, genderColors } from '@/utils';
 
-const props = defineProps({ product: Object, sources: Object, backUrl: String });
+const props = defineProps({ product: Object, sources: Object, genders: Object, backUrl: String });
 const p = props.product;
 
 const form = useForm({
     name: p?.name ?? '',
+    gender: p?.gender ?? '',
     description: p?.description ?? '',
     source: p?.source ?? 'pinduoduo',
     pinduoduo_url: p?.pinduoduo_url ?? '',
@@ -86,6 +87,20 @@ function submit() {
                 <div class="card space-y-4 p-4 sm:p-5">
                     <Field label="Название" :error="form.errors.name">
                         <input v-model="form.name" class="input" placeholder="например: polo spartivka sumkov" required />
+                    </Field>
+                    <Field label="Для кого" :error="form.errors.gender">
+                        <div class="flex flex-wrap gap-1.5">
+                            <button
+                                v-for="(label, key) in genders"
+                                :key="key"
+                                type="button"
+                                class="rounded-lg px-3 py-2 text-sm transition"
+                                :class="form.gender === key ? genderColors[key] + ' font-medium ring-1 ring-current' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                @click="form.gender = form.gender === key ? '' : key"
+                            >
+                                {{ genderIcons[key] }} {{ label }}
+                            </button>
+                        </div>
                     </Field>
                     <Field label="Описание" :error="form.errors.description">
                         <textarea v-model="form.description" rows="3" class="input" />

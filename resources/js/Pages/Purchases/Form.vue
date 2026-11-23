@@ -4,7 +4,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import Field from '@/Components/UI/Field.vue';
-import { money, today } from '@/utils';
+import { money, today, genderIcons } from '@/utils';
 
 const props = defineProps({
     purchase: Object,
@@ -13,6 +13,7 @@ const props = defineProps({
     statuses: Object,
     lastRate: [Number, String],
     backUrl: String,
+    genders: Object,
 });
 const p = props.purchase;
 const isLegacy = !!p && !p.items?.length;
@@ -26,7 +27,7 @@ const newLine = () => ({
     id: null,
     mode: 'new',
     product_id: '',
-    new_product: { name: '', description: '', pinduoduo_url: '', images: [] },
+    new_product: { name: '', gender: '', description: '', pinduoduo_url: '', images: [] },
     price_yuan: '',
     price_amd: '',
     sell_price: '',
@@ -338,7 +339,13 @@ function submit() {
                                         <Field label="Ссылка Pinduoduo">
                                             <input v-model="line.new_product.pinduoduo_url" class="input" placeholder="https://mobile.yangkeduo.com/…" />
                                         </Field>
-                                        <Field label="Описание" class="sm:col-span-2">
+                                        <Field label="Для кого">
+                                            <select v-model="line.new_product.gender" class="input">
+                                                <option value="">— не указано —</option>
+                                                <option v-for="(label, key) in genders" :key="key" :value="key">{{ genderIcons[key] }} {{ label }}</option>
+                                            </select>
+                                        </Field>
+                                        <Field label="Описание">
                                             <input v-model="line.new_product.description" class="input" />
                                         </Field>
                                     </template>

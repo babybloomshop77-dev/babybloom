@@ -21,6 +21,26 @@ trait Concerns
         return [$month, $start, $start->copy()->endOfMonth()];
     }
 
+    /** Все виды тире и дефисов: - ‐ ‑ ‒ – — ― − */
+    private const DASHES = '/[\x{002D}\x{2010}-\x{2015}\x{2212}]/u';
+
+    /**
+     * Шаблон для поиска через LIKE: «2-3» находит и «2–3», и «2—3».
+     * Любое тире заменяется на «_» (один любой символ).
+     */
+    protected function like(string $search): string
+    {
+        $escaped = addcslashes(trim($search), '\\%_');
+
+        return '%'.preg_replace(self::DASHES, '_', $escaped).'%';
+    }
+
+    /** Привести все тире к обычному дефису (для поиска в PHP-коллекциях) */
+    protected function plainDashes(?string $text): string
+    {
+        return preg_replace(self::DASHES, '-', (string) $text);
+    }
+
     /** Страница, с которой открыли форму (для «Назад» и возврата после сохранения) */
     protected function backUrl(string $fallback): string
     {

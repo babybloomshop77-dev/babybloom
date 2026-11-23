@@ -18,7 +18,7 @@ class ExpenseController extends Controller
         $query = Expense::query()
             ->when($start, fn ($q) => $q->whereBetween('spent_at', [$start, $end]))
             ->when($request->category, fn ($q, $c) => $q->where('category', $c))
-            ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"));
+            ->when($request->search, fn ($q, $s) => $q->where('title', 'like', $this->like($s)));
 
         return Inertia::render('Expenses/Index', [
             'expenses' => (clone $query)->latest('spent_at')->latest('id')->paginate(100)->withQueryString(),

@@ -39,7 +39,7 @@ class CashController extends Controller
         $period = $all
             ->when($start, fn ($c) => $c->filter(fn ($m) => $m->moved_at->between($start, $end)))
             ->when($request->type, fn ($c, $t) => $c->where('type', $t))
-            ->when($request->search, fn ($c, $s) => $c->filter(fn ($m) => mb_stripos($m->title.' '.$m->category.' '.$m->note, $s) !== false));
+            ->when($request->search, fn ($c, $s) => $c->filter(fn ($m) => mb_stripos($this->plainDashes($m->title.' '.$m->category.' '.$m->note), $this->plainDashes($s)) !== false));
 
         return Inertia::render('Cash/Index', [
             'movements' => $period->reverse()->values(),

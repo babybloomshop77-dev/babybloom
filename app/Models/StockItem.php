@@ -17,7 +17,7 @@ class StockItem extends Model
     ];
 
     protected $fillable = [
-        'product_id', 'purchase_id', 'purchase_item_id', 'size', 'color', 'buy_price', 'sell_price',
+        'product_id', 'purchase_id', 'purchase_item_id', 'order_id', 'size', 'color', 'buy_price', 'sell_price',
         'status', 'reserved_for', 'arrived_at', 'sold_at', 'note',
     ];
 
@@ -39,6 +39,11 @@ class StockItem extends Model
     public function purchaseItem(): BelongsTo
     {
         return $this->belongsTo(PurchaseItem::class);
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
     }
 
     public function sale(): HasOne

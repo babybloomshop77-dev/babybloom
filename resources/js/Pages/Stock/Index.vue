@@ -7,11 +7,17 @@ import Pagination from '@/Components/UI/Pagination.vue';
 import StatCard from '@/Components/UI/StatCard.vue';
 import Dialog from '@/Components/UI/Dialog.vue';
 import Field from '@/Components/UI/Field.vue';
-import { money, date, today, statusColors, imageFor } from '@/utils';
+import GenderFilter from '@/Components/UI/GenderFilter.vue';
+import { money, date, today, statusColors, imageFor, genderIcons } from '@/utils';
 
-const props = defineProps({ items: Object, totals: Object, filters: Object, products: Array, purchases: Array, statuses: Object });
+const props = defineProps({ items: Object, totals: Object, filters: Object, products: Array, purchases: Array, statuses: Object, genders: Object });
 
-const filters = reactive({ status: props.filters.status, product_id: props.filters.product_id || '', search: props.filters.search || '' });
+const filters = reactive({
+    status: props.filters.status,
+    product_id: props.filters.product_id || '',
+    search: props.filters.search || '',
+    gender: props.filters.gender || '',
+});
 let timer;
 watch(filters, () => {
     clearTimeout(timer);
@@ -158,6 +164,7 @@ function destroy(item) {
                     </button>
                 </div>
             </div>
+            <GenderFilter v-model="filters.gender" />
             <select v-model="filters.product_id" class="filter-select">
                 <option value="">Все товары</option>
                 <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
@@ -205,7 +212,7 @@ function destroy(item) {
                     </label>
                     <div class="min-w-0 flex-1">
                         <div class="flex items-start justify-between gap-2">
-                            <Link :href="route('products.edit', item.product_id)" class="font-medium leading-snug text-gray-900 underline decoration-gray-300 underline-offset-2">{{ item.product?.name }}</Link>
+                            <Link :href="route('products.edit', item.product_id)" class="font-medium leading-snug text-gray-900 underline decoration-gray-300 underline-offset-2"><span v-if="item.product?.gender" class="no-underline">{{ genderIcons[item.product.gender] }} </span>{{ item.product?.name }}</Link>
                             <div class="whitespace-nowrap font-semibold tabular-nums">{{ money(item.sell_price) }}</div>
                         </div>
                         <div class="mt-0.5 text-sm text-gray-600">{{ item.size || '—' }}</div>
@@ -219,7 +226,8 @@ function destroy(item) {
                     </div>
                 </div>
                 <div class="mt-3 flex gap-2">
-                    <button v-if="item.status !== 'sold'" class="btn-primary flex-1" @click="openSell(item)">Продать</button>
+                    <button v-if="item.status !== 'sold' && !item.order_id" class="btn-primary flex-1" @click="openSell(item)">Продать</button>
+                    <Link v-else-if="item.order_id && item.status !== 'sold'" :href="route('orders.index', { status: 'all' })" class="flex-1 self-center text-xs text-pink-600">📦 в заказе → Заказы</Link>
                     <div v-else class="flex-1 self-center text-xs text-gray-400">продан {{ date(item.sold_at) }}</div>
                     <button class="btn-secondary px-4" @click="openEdit(item)">✎</button>
                     <button class="btn-danger px-4" @click="destroy(item)">✕</button>
@@ -270,7 +278,7 @@ function destroy(item) {
                             <div v-else class="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100">🧸</div>
                         </td>
                         <td class="font-medium text-gray-900">
-                            <Link :href="route('products.edit', item.product_id)" class="hover:text-pink-600">{{ item.product?.name }}</Link>
+                            <Link :href="route('products.edit', item.product_id)" class="hover:text-pink-600"><span v-if="item.product?.gender">{{ genderIcons[item.product.gender] }} </span>{{ item.product?.name }}</Link>
                             <div v-if="item.note" class="text-xs font-normal text-gray-400">{{ item.note }}</div>
                         </td>
                         <td class="max-w-[16rem] text-gray-600">{{ item.size || '—' }}</td>
@@ -285,7 +293,8 @@ function destroy(item) {
                             {{ item.status === 'sold' ? date(item.sold_at) : date(item.arrived_at) }}
                         </td>
                         <td class="whitespace-nowrap text-right">
-                            <button v-if="item.status !== 'sold'" class="btn-primary btn-sm" @click="openSell(item)">Продать</button>
+                            <button v-if="item.status !== 'sold' && !item.order_id" class="btn-primary btn-sm" @click="openSell(item)">Продать</button>
+                            <span v-else-if="item.order_id && item.status !== 'sold'" class="mr-1 text-xs text-pink-600">📦 в заказе</span>
                             <button class="btn-secondary btn-sm ml-1" @click="openEdit(item)">✎</button>
                             <button class="btn-danger btn-sm ml-1" @click="destroy(item)">✕</button>
                         </td>

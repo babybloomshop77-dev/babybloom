@@ -9,8 +9,21 @@ class Product extends Model
 {
     public const SOURCES = ['pinduoduo' => 'Pinduoduo', 'wholesale' => 'Оптовик', 'other' => 'Другое'];
 
+    public const GENDERS = ['boy' => 'Мальчик', 'girl' => 'Девочка', 'unisex' => 'Унисекс'];
+
+    /** Фильтр «для кого»: мальчик и девочка включают унисекс; none — не указано */
+    public function scopeForGender($query, ?string $gender)
+    {
+        return match ($gender) {
+            'boy', 'girl' => $query->whereIn('gender', [$gender, 'unisex']),
+            'unisex' => $query->where('gender', 'unisex'),
+            'none' => $query->whereNull('gender'),
+            default => $query,
+        };
+    }
+
     protected $fillable = [
-        'name', 'description', 'source', 'pinduoduo_url', 'buy_price_yuan', 'buy_price_amd',
+        'name', 'gender', 'description', 'source', 'pinduoduo_url', 'buy_price_yuan', 'buy_price_amd',
         'shipping_cost', 'sell_price', 'sizes', 'colors', 'notes', 'is_active',
     ];
 

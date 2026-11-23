@@ -4,16 +4,30 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import Pagination from '@/Components/UI/Pagination.vue';
-import { money, sourceColors, imageFor } from '@/utils';
+import GenderFilter from '@/Components/UI/GenderFilter.vue';
+import { money, sourceColors, imageFor, genderIcons, genderColors } from '@/utils';
 
-const props = defineProps({ products: Object, filters: Object, sources: Object });
+const props = defineProps({ products: Object, filters: Object, sources: Object, genders: Object });
 
-const filters = reactive({ search: props.filters.search || '', source: props.filters.source || '' });
+const filters = reactive({
+    search: props.filters.search || '',
+    source: props.filters.source || '',
+    gender: props.filters.gender || '',
+});
 let timer;
 watch(filters, () => {
     clearTimeout(timer);
     timer = setTimeout(() => router.get(route('products.index'), filters, { preserveState: true, replace: true }), 300);
 });
+
+// Быстро отметить «для кого» прямо на карточке (повторное нажатие снимает отметку)
+function setGender(product, gender) {
+    router.patch(
+        route('products.gender', product.id),
+        { gender: product.gender === gender ? null : gender },
+        { preserveScroll: true, preserveState: true },
+    );
+}
 
 function destroy(product) {
     if (confirm(`Удалить «${product.name}»? Склад этого товара тоже удалится.`)) {
@@ -34,6 +48,10 @@ function destroy(product) {
             <Link :href="route('products.create')" class="btn-primary">+ Добавить товар</Link>
         </PageHeader>
 
+        <div class="mb-4">
+            <GenderFilter v-model="filters.gender" with-none />
+        </div>
+
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             <div v-for="product in products.data" :key="product.id" class="card flex flex-col overflow-hidden">
                 <Link :href="route('products.edit', product.id)" class="relative block aspect-[4/3] bg-gray-100">
@@ -46,6 +64,9 @@ function destroy(product) {
                     <div v-else class="flex h-full items-center justify-center text-4xl text-gray-300">🧸</div>
                     <span class="badge absolute left-2 top-2" :class="sourceColors[product.source]">
                         {{ sources[product.source] }}
+                    </span>
+                    <span v-if="product.gender" class="badge absolute bottom-2 left-2 shadow" :class="genderColors[product.gender]">
+                        {{ genderIcons[product.gender] }} {{ genders[product.gender] }}
                     </span>
                     <span
                         v-if="product.images.length > 1"
@@ -87,6 +108,21 @@ function destroy(product) {
                             rel="noopener"
                             class="text-orange-600 hover:underline"
                         >Pinduoduo ↗</a>
+                    </div>
+
+                    <div class="mt-3 flex items-center gap-1.5 border-t pt-3 text-xs">
+                        <span class="mr-1 whitespace-nowrap text-gray-500">Для кого:</span>
+                        <button
+                            v-for="(label, key) in genders"
+                            :key="key"
+                            type="button"
+                            class="flex-1 whitespace-nowrap rounded-md px-1.5 py-1.5 text-center transition"
+                            :class="product.gender === key ? genderColors[key] + ' font-medium ring-1 ring-current' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'"
+                            :title="label"
+                            @click="setGender(product, key)"
+                        >
+                            {{ genderIcons[key] }} {{ label }}
+                        </button>
                     </div>
 
                     <div class="mt-3 flex gap-2 border-t pt-3">

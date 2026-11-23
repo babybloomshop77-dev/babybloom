@@ -27,7 +27,7 @@ class PurchaseController extends Controller
             ->when($start, fn ($q) => $q->whereBetween('purchased_at', [$start, $end]))
             ->when($request->source, fn ($q, $s) => $q->where('source', $s))
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
-            ->when($request->search, fn ($q, $s) => $q->where('title', 'like', "%{$s}%"));
+            ->when($request->search, fn ($q, $s) => $q->where('title', 'like', $this->like($s)));
 
         return Inertia::render('Purchases/Index', [
             'purchases' => (clone $query)
@@ -77,8 +77,9 @@ class PurchaseController extends Controller
         return [
             'purchase' => $purchase,
             'products' => Product::with('images')->orderBy('name')
-                ->get(['id', 'name', 'sizes', 'colors', 'sell_price', 'buy_price_amd', 'buy_price_yuan', 'pinduoduo_url']),
+                ->get(['id', 'name', 'gender', 'sizes', 'colors', 'sell_price', 'buy_price_amd', 'buy_price_yuan', 'pinduoduo_url']),
             'sources' => Product::SOURCES,
+            'genders' => Product::GENDERS,
             'statuses' => Purchase::STATUSES,
             'lastRate' => Purchase::whereNotNull('yuan_rate')->latest('id')->value('yuan_rate'),
             'backUrl' => $this->backUrl(route('purchases.index')),
@@ -234,6 +235,7 @@ class PurchaseController extends Controller
             $np = $line['new_product'];
             $product = Product::create([
                 'name' => $np['name'],
+                'gender' => $np['gender'] ?? null,
                 'description' => $np['description'] ?? null,
                 'source' => $purchase->source,
                 'pinduoduo_url' => $np['pinduoduo_url'] ?? null,
@@ -324,6 +326,7 @@ class PurchaseController extends Controller
             'lines.*.mode' => 'nullable|in:existing,new',
             'lines.*.product_id' => 'nullable|required_if:lines.*.mode,existing|exists:products,id',
             'lines.*.new_product.name' => 'nullable|required_if:lines.*.mode,new|string|max:255',
+            'lines.*.new_product.gender' => 'nullable|in:'.implode(',', array_keys(Product::GENDERS)),
             'lines.*.new_product.description' => 'nullable|string',
             'lines.*.new_product.pinduoduo_url' => 'nullable|string',
             'lines.*.new_product.images' => 'nullable|array',

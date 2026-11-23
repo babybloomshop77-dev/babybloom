@@ -18,7 +18,7 @@ class SaleController extends Controller
         $query = Sale::query()
             ->when($start, fn ($q) => $q->whereBetween('sold_at', [$start, $end]))
             ->when($request->search, fn ($q, $s) => $q->where(fn ($q) => $q
-                ->where('product', 'like', "%{$s}%")->orWhere('customer_name', 'like', "%{$s}%")));
+                ->where('product', 'like', $this->like($s))->orWhere('customer_name', 'like', $this->like($s))));
 
         return Inertia::render('Sales/Index', [
             'sales' => (clone $query)->latest('sold_at')->latest('id')->paginate(100)->withQueryString(),
@@ -50,7 +50,10 @@ class SaleController extends Controller
         // Если продажа была со склада — вернуть товар в наличие
         $sale->stockItem?->update(['status' => 'in_stock', 'sold_at' => null]);
         // Если продажа из заказа — заказ снова «не выполнен»
-        $sale->order?->updateQuietly(['is_done' => false]);
+        if ($order = $sale->order) {
+            $order->updateQuietly(['is_done' => false]);
+            $order->applyItemStates();
+        }
         $sale->delete();
 
         return back()->with('success', 'Продажа удалена');
