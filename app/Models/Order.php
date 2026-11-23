@@ -22,7 +22,7 @@ class Order extends Model
     /**
      * Заказ выполнен -> создаётся продажа (она сама добавляет деньги в кассу),
      * товары заказа становятся проданными.
-     * Снята галочка -> продажа удаляется, деньги уходят из кассы, товары снова в брони.
+     * Снята галочка -> продажа удаляется, деньги уходят из кассы, товары снова «В обработке».
      * Заказ удалён -> товары возвращаются на склад.
      */
     protected static function booted(): void
@@ -76,7 +76,7 @@ class Order extends Model
         $this->applyItemStates();
     }
 
-    /** Выполнен -> товары проданы; не выполнен -> в брони за клиентом */
+    /** Выполнен -> товары проданы; не выполнен -> «В обработке» (под именем клиента) */
     public function applyItemStates(): void
     {
         if ($this->is_done) {
@@ -84,7 +84,7 @@ class Order extends Model
                 $item->update(['status' => 'sold', 'reserved_for' => null, 'sold_at' => $item->sold_at ?? now()->toDateString()]);
             }
         } else {
-            $this->stockItems()->update(['status' => 'reserved', 'sold_at' => null, 'reserved_for' => $this->customer_name]);
+            $this->stockItems()->update(['status' => 'processing', 'sold_at' => null, 'reserved_for' => $this->customer_name]);
         }
     }
 }

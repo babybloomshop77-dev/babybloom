@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class StockItem extends Model
 {
+    /** У кого лежат вещи (быстрые фильтры на складе). Добавьте сюда новые имена при необходимости. */
+    public const HOLDERS = ['Goqi mot'];
+
     public const STATUSES = [
         'ordered' => 'В пути',
         'in_stock' => 'В наличии',

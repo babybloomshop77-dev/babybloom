@@ -22,6 +22,8 @@ class StockItemController extends Controller
         $query = StockItem::query()
             ->with('product:id,name,gender', 'product.images')
             ->when($request->gender, fn ($q, $g) => $q->whereHas('product', fn ($q) => $q->forGender($g)))
+            // «Goqi mot» и т. п.: ищем имя внутри поля «Для кого (бронь)»
+            ->when($request->holder, fn ($q, $h) => $q->where('reserved_for', 'like', $this->like($h)))
             ->when($status === 'available', fn ($q) => $q->where('status', '!=', 'sold'))
             ->when($status && $status !== 'available' && $status !== 'all', fn ($q) => $q->where('status', $status))
             ->when($request->product_id, fn ($q, $id) => $q->where('product_id', $id))
@@ -43,8 +45,12 @@ class StockItemController extends Controller
                 'cost' => (int) (clone $query)->sum('buy_price'),
                 'value' => (int) (clone $query)->sum('sell_price'),
             ],
-            'filters' => ['status' => $status, 'product_id' => $request->product_id, 'search' => $request->search, 'gender' => $request->gender],
+            'filters' => ['status' => $status, 'product_id' => $request->product_id, 'search' => $request->search, 'gender' => $request->gender, 'holder' => $request->holder],
             'genders' => Product::GENDERS,
+            // Сколько непроданных вещей у каждого
+            'holders' => collect(StockItem::HOLDERS)->mapWithKeys(fn ($h) => [
+                $h => StockItem::where('status', '!=', 'sold')->where('reserved_for', 'like', $this->like($h))->count(),
+            ]),
             'products' => Product::orderBy('name')->get(['id', 'name', 'sizes', 'colors', 'sell_price', 'buy_price_amd', 'shipping_cost']),
             'purchases' => Purchase::latest('purchased_at')->limit(100)->get(['id', 'title', 'purchased_at', 'product_id', 'quantity', 'price_amd', 'shipping_cost']),
             'statuses' => StockItem::STATUSES,

@@ -118,7 +118,7 @@ const label = (o) => [o.size, o.color].filter(Boolean).join(' · ');
                         <div class="truncate text-xs text-gray-500">
                             {{ label(o) || '—' }}
                             <span v-if="statusLabels[o.status]" class="ml-1 text-amber-600">
-                                · {{ statusLabels[o.status] }}<template v-if="o.reserved_for && o.status === 'reserved'"> ({{ o.reserved_for }})</template>
+                                · {{ statusLabels[o.status] }}<template v-if="o.reserved_for"> ({{ o.reserved_for }})</template>
                             </span>
                         </div>
                     </div>

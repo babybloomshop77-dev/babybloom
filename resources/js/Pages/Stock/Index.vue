@@ -10,13 +10,14 @@ import Field from '@/Components/UI/Field.vue';
 import GenderFilter from '@/Components/UI/GenderFilter.vue';
 import { money, date, today, statusColors, imageFor, genderIcons } from '@/utils';
 
-const props = defineProps({ items: Object, totals: Object, filters: Object, products: Array, purchases: Array, statuses: Object, genders: Object });
+const props = defineProps({ items: Object, totals: Object, filters: Object, products: Array, purchases: Array, statuses: Object, genders: Object, holders: Object });
 
 const filters = reactive({
     status: props.filters.status,
     product_id: props.filters.product_id || '',
     search: props.filters.search || '',
     gender: props.filters.gender || '',
+    holder: props.filters.holder || '',
 });
 let timer;
 watch(filters, () => {
@@ -165,6 +166,16 @@ function destroy(item) {
                 </div>
             </div>
             <GenderFilter v-model="filters.gender" />
+            <button
+                v-for="(count, name) in holders"
+                :key="name"
+                type="button"
+                class="btn whitespace-nowrap ring-1"
+                :class="filters.holder === name ? 'bg-blue-500 text-white ring-blue-500' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50'"
+                @click="filters.holder = filters.holder === name ? '' : name"
+            >
+                📍 {{ name }} <span class="rounded-full bg-black/10 px-1.5 text-xs">{{ count }}</span>
+            </button>
             <select v-model="filters.product_id" class="filter-select">
                 <option value="">Все товары</option>
                 <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
